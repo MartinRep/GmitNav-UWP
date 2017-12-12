@@ -1,0 +1,14 @@
+﻿<Page
+    x:Class="GmitNavUWP.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:GmitNavUWP"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:Maps="using:Windows.UI.Xaml.Controls.Maps"
+    mc:Ignorable="d">
+   
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Maps:MapControl x:Name="gmitMap"  MapServiceToken="BthYfWNgDGiuinuOJeNp~K_8dBE3ryuxHKZfHV5ZeqA~AtnGcy42Rh5I0ywC04N9QXM-DPPwy8Yd5u0UAm81dUpcAhceWvAwynV7oHIsDinl" Margin="0,6,0,-6"/>
+    </Grid>
+</Page>
