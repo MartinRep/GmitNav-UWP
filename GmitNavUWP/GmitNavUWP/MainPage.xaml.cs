@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Devices.Geolocation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -26,6 +27,7 @@ namespace GmitNavUWP
     public sealed partial class MainPage : Page
     {
         Geopoint gmit;
+        Geopoint gmitNew;
         public MainPage()
         {
             this.InitializeComponent();
@@ -40,14 +42,16 @@ namespace GmitNavUWP
                 Longitude = -9.01,
                 Altitude = 0
             }, AltitudeReferenceSystem.Surface);
-            gmitMap.ZoomLevel = 18;
-            gmitMap.LandmarksVisible = false;
-            gmitMap.Center = new Geopoint(new BasicGeoposition()
+            gmitNew = new Geopoint(new BasicGeoposition()
             {
-                Latitude = 0,
-                Longitude = 0
-            });
-            await gmitMap.TrySetViewAsync(gmit, 17D, 0, 0);
+                Latitude = 53.278038,
+                Longitude = -9.00876,
+                Altitude = 0
+            }, AltitudeReferenceSystem.Surface);
+            //gmitMap.ZoomLevel = 19;
+            gmitMap.LandmarksVisible = false;
+            // gmitMap.Center = gmit;
+            
 
             try
             {
@@ -58,29 +62,21 @@ namespace GmitNavUWP
             {
                 Debug.WriteLine("Exception");
             }
-
         }
 
-        public void AddMapOverlayAsync()
+        public async void AddMapOverlayAsync()
         {
             // Create MapBillboard.
+            await gmitMap.TrySetViewAsync(gmitNew, 20D, 0, 0);
+            await gmitMap.TrySetViewAsync(gmitNew, 20D, 0, 0);
             RandomAccessStreamReference imgStream =
                 RandomAccessStreamReference.CreateFromUri(new Uri("ms-appx:///Assets/dgmit0.png"));
-            var imgUri = new Uri("ms-appx:///Assets/d2.jpg");
-            var _img = new Image();
-            _img.Stretch = Stretch.Fill;
-            _img.Source = new BitmapImage(imgUri);
-            var gmitCamera = new MapCamera(gmit);
-            gmitMap.ZoomLevel = 19;
-            var actCamera = gmitMap.ActualCamera;
-            Debug.WriteLine(gmitMap.ZoomLevel.ToString());
-            
-
-
-            var mapBillboard = new MapBillboard(actCamera)
+            MapControl originalCamera = gmitMap;
+            Debug.WriteLine(gmitMap.ZoomLevel);
+            var mapBillboard = new MapBillboard(gmitMap.ActualCamera)
             {
-                Location = gmit,
-                NormalizedAnchorPoint = new Point(0.5, 0.5),
+                Location = gmitNew,
+                NormalizedAnchorPoint = new Point(1D, 0D),
                 Image = imgStream,
             };
             var GmitFloorMaps = new List<MapElement>();
@@ -93,39 +89,11 @@ namespace GmitNavUWP
             };
 
             gmitMap.Layers.Add(LandmarksPhotoLayer);
-            
+            //gmitMap.ZoomLevel = 15;
+            Debug.WriteLine(gmitMap.ZoomLevel);
+            await gmitMap.TrySetViewAsync(gmitNew, 19D, 0, 0);
         }
 
-        public void addOverlay()
-        {
-            BasicGeoposition northWestCorner =
-                new BasicGeoposition() { Latitude = Util.Building.New.SOUTH, Longitude = Util.Building.New.EAST };
-            BasicGeoposition southEastCorner =
-                new BasicGeoposition() { Latitude = Util.Building.New.NORTH, Longitude = Util.Building.New.WEST };
-            GeoboundingBox boundingNewBuilding = new GeoboundingBox(northWestCorner, southEastCorner);
-            //BasicGeoposition northWestCorner =
-            //   new BasicGeoposition() { Latitude = 48.38544, Longitude = -124.667360 };
-            //BasicGeoposition southEastCorner =
-            //    new BasicGeoposition() { Latitude = 25.26954, Longitude = -80.30182 };
-            //GeoboundingBox boundingBox = new GeoboundingBox(northWestCorner, southEastCorner);
-
-
-            LocalMapTileDataSource dataSource =
-                new LocalMapTileDataSource("ms-appx:///Assets/dgmit0.png");
-            MapZoomLevelRange range;
-            range.Min = 17;
-            range.Max = 17;
-            MapTileSource tileSource = new MapTileSource(dataSource)
-            {
-                Bounds = boundingNewBuilding,
-                ZoomLevelRange = range,
-                AllowOverstretch = true,
-                Layer = MapTileLayer.BackgroundReplacement
-            };
-            gmitMap.TileSources.Add(tileSource);
-        }
-
-        
         //gmitMap.Children.Add(mapBillboard);
         // gmitMap.MapElements.Add(mapBillboard);
         //gmitMap.MapElements.Add(mapBillboard);
