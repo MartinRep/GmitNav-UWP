@@ -28,14 +28,22 @@ namespace GmitNavUWP
     {
         Geopoint gmit;
         Geopoint gmitNew;
+        Geopoint room993;
         public MainPage()
         {
             this.InitializeComponent();
-            this.Loaded += MainPage_LoadedAsync;
+            gmitMap.Loaded += MapConfigAsync;
         }
 
-        public async void MainPage_LoadedAsync(object sender, RoutedEventArgs e)
+        public async void MapConfigAsync(object sender, RoutedEventArgs e)
         {
+            gmitMap.LandmarksVisible = false;
+            room993 = new Geopoint(new BasicGeoposition()
+            {
+                Latitude = 53.27784461170297,
+                Longitude = -9.010525792837143,
+                Altitude = 0
+            });
             gmit = new Geopoint(new BasicGeoposition()
             {
                 Latitude = 53.2785,
@@ -48,61 +56,81 @@ namespace GmitNavUWP
                 Longitude = -9.00876,
                 Altitude = 0
             }, AltitudeReferenceSystem.Surface);
-            //gmitMap.ZoomLevel = 19;
-            gmitMap.LandmarksVisible = false;
-            // gmitMap.Center = gmit;
-            
 
-            try
-            {
-                AddMapOverlayAsync();
-                //addOverlay();
-            }
-            catch (UnauthorizedAccessException)
-            {
-                Debug.WriteLine("Exception");
-            }
+            int index = await AddMapOverlayAsync(Util.Building.New.NORTH, Util.Building.New.WEST, new Uri("ms-appx:///Assets/dgmit0.png"));
+            Debug.WriteLine(index);
+            index = AddMarker(53.27784461170297, -9.010525792837143, "993");
+            index = AddMarker(53.27798093343066, -9.011201709672605, "994");
+            index = AddMarker(Util.Building.New.NORTH, Util.Building.New.WEST, "N-W");
+            index = AddMarker(Util.Building.New.SOUTH, Util.Building.New.EAST, "S-E");
+            Debug.WriteLine(index);
+            //gmitMap.Layers.ElementAt(index).Visible= false;
         }
 
-        public async void AddMapOverlayAsync()
+        public async Task<int> AddMapOverlayAsync(Double latitude, Double longtitude, Uri img)
         {
+            // Defining position for image overlay. Map View ZoomLevel defines the images size relative to map
+            // calls 2x - a temp solution for inconsistency when Setting the view
+            await gmitMap.TrySetViewAsync(gmit, 28D, 0, 0);
+            await gmitMap.TrySetViewAsync(gmit, 28D, 0, 0);
+            Geopoint position = new Geopoint(new BasicGeoposition()
+            {
+                Latitude = latitude,
+                Longitude = longtitude,
+                Altitude = 0
+            }, AltitudeReferenceSystem.Surface);
+
             // Create MapBillboard.
-            await gmitMap.TrySetViewAsync(gmitNew, 20D, 0, 0);
-            await gmitMap.TrySetViewAsync(gmitNew, 20D, 0, 0);
             RandomAccessStreamReference imgStream =
-                RandomAccessStreamReference.CreateFromUri(new Uri("ms-appx:///Assets/dgmit0.png"));
-            MapControl originalCamera = gmitMap;
+                RandomAccessStreamReference.CreateFromUri(img);
             Debug.WriteLine(gmitMap.ZoomLevel);
             var mapBillboard = new MapBillboard(gmitMap.ActualCamera)
             {
-                Location = gmitNew,
-                NormalizedAnchorPoint = new Point(1D, 0D),
+                Location = position,
+                NormalizedAnchorPoint = new Point(0D, 0D),
                 Image = imgStream,
             };
+            int index = gmitMap.Layers.Count;
             var GmitFloorMaps = new List<MapElement>();
             GmitFloorMaps.Add(mapBillboard);  
             var LandmarksPhotoLayer = new MapElementsLayer
             {
-                ZIndex = 1,
+                ZIndex = index,
                 MapElements = GmitFloorMaps,
                 Visible = true
             };
-
             gmitMap.Layers.Add(LandmarksPhotoLayer);
-            //gmitMap.ZoomLevel = 15;
             Debug.WriteLine(gmitMap.ZoomLevel);
-            await gmitMap.TrySetViewAsync(gmitNew, 19D, 0, 0);
+            await gmitMap.TrySetViewAsync(gmit, 19D, 0, 0);
+            return index;
         }
 
-        //gmitMap.Children.Add(mapBillboard);
-        // gmitMap.MapElements.Add(mapBillboard);
-        //gmitMap.MapElements.Add(mapBillboard);
-
-        // gmitMap.Children.Clear();
-
-        // gmitMap.Children.Add(_img);
-
-
+        public int AddMarker(Double latitude, Double longtitude, String title)
+        {
+            int index = gmitMap.Layers.Count;
+            var MyLandmarks = new List<MapElement>();
+            Geopoint snPoint = new Geopoint(new BasicGeoposition()
+            {
+                Latitude = latitude,
+                Longitude = longtitude,
+                Altitude = 0
+            }, AltitudeReferenceSystem.Surface);
+            var spaceNeedleIcon = new MapIcon
+            {
+                Location = snPoint,
+                NormalizedAnchorPoint = new Point(0.5, 1.0),
+                ZIndex = 0,
+                Title = title
+            };
+            MyLandmarks.Add(spaceNeedleIcon);
+            var LandmarksLayer = new MapElementsLayer
+            {
+                ZIndex = index,
+                MapElements = MyLandmarks
+            };
+            gmitMap.Layers.Add(LandmarksLayer);
+            return index;
+        }
     }
 }
 

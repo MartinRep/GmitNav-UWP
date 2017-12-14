@@ -44,10 +44,10 @@ namespace GmitNavUWP
 
             public class New
             {
-                public static double NORTH = 53.277276;
-                public static double EAST = -9.01195;
-                public static double SOUTH = 53.278235;
-                public static double WEST = -9.00911;
+                public static double SOUTH = 53.277276;
+                public static double WEST = -9.01195;
+                public static double NORTH = 53.278235;
+                public static double EAST = -9.00911;
             }
         }
     }
