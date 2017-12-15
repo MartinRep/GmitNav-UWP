@@ -57,28 +57,33 @@ namespace GmitNavUWP
                 Altitude = 0
             }, AltitudeReferenceSystem.Surface);
 
-            int index = await AddMapOverlayAsync(Util.Building.New.NORTH, Util.Building.New.WEST, new Uri("ms-appx:///Assets/dgmit0.png"));
+            int index = await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/dgmit0.png"));
+            //gmitMap.Layers.ElementAt(index).Visible = false;
             Debug.WriteLine(index);
             index = AddMarker(53.27784461170297, -9.010525792837143, "993");
             index = AddMarker(53.27798093343066, -9.011201709672605, "994");
-            index = AddMarker(Util.Building.New.NORTH, Util.Building.New.WEST, "N-W");
-            index = AddMarker(Util.Building.New.SOUTH, Util.Building.New.EAST, "S-E");
+            index = AddMarker(53.27782616819727, -9.01072964080413, "966");
+            index = AddMarker(53.27927436396021, -9.009757339964608, "105");
+            index = AddMarker(53.27941629407834, -9.011182934045792, "145");
+            //index = AddMarker(Util.Building.New.NORTH, Util.Building.New.WEST, "N-W");
+            //index = AddMarker(Util.Building.New.SOUTH, Util.Building.New.EAST, "S-E");
             Debug.WriteLine(index);
-            //gmitMap.Layers.ElementAt(index).Visible= false;
+            
         }
 
         public async Task<int> AddMapOverlayAsync(Double latitude, Double longtitude, Uri img)
         {
             // Defining position for image overlay. Map View ZoomLevel defines the images size relative to map
             // calls 2x - a temp solution for inconsistency when Setting the view
-            await gmitMap.TrySetViewAsync(gmit, 28D, 0, 0);
-            await gmitMap.TrySetViewAsync(gmit, 28D, 0, 0);
             Geopoint position = new Geopoint(new BasicGeoposition()
             {
                 Latitude = latitude,
                 Longitude = longtitude,
                 Altitude = 0
             }, AltitudeReferenceSystem.Surface);
+            await gmitMap.TrySetViewAsync(position, 19D, 0, 0);
+            await gmitMap.TrySetViewAsync(position, 19D, 0, 0);
+            
 
             // Create MapBillboard.
             RandomAccessStreamReference imgStream =
@@ -118,7 +123,7 @@ namespace GmitNavUWP
             var spaceNeedleIcon = new MapIcon
             {
                 Location = snPoint,
-                NormalizedAnchorPoint = new Point(0.5, 1.0),
+                NormalizedAnchorPoint = new Point(0D, 0D),
                 ZIndex = 0,
                 Title = title
             };
