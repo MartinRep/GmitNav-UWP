@@ -19,15 +19,15 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json;
 
 namespace GmitNavUWP
 {
 
     public sealed partial class MainPage : Page
     {
-        Geopoint gmit;
-
+       
         public MainPage()
         {
             this.InitializeComponent();
@@ -74,6 +74,7 @@ namespace GmitNavUWP
         public async void MapConfigAsync(object sender, RoutedEventArgs e)
         {
             gmitMap.LandmarksVisible = false;
+            
             //index = await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/dgmit0.png")); //SubLevel
             int index = await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/dgmit0.png")); //GroundLevel
             //index = await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/dgmit0.png")); // First Level
