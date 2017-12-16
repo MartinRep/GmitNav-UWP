@@ -33,7 +33,23 @@ namespace GmitNavUWP
             this.InitializeComponent();
             gmitMap.Loaded += MapConfigAsync;
             gmitMap.ZoomLevelChanged += MapZoomControl;
-            gmitMap.TargetCameraChanged += CameraBoundriesAsync;
+            gmitMap.CenterChanged += CenterBoundries;
+        }
+
+        private void CenterBoundries(MapControl sender, object args)
+        {
+            Debug.WriteLine(gmitMap.Center.Position.Latitude);
+            Debug.WriteLine(gmitMap.Center.Position.Longitude);
+            var gmit = new Geopoint(new BasicGeoposition()
+            {
+                Latitude = Util.Building.Old.NORTH,
+                Longitude = Util.Building.Old.WEST
+            });
+            if (gmitMap.ActualCamera.Location.Position.Latitude > 53.28
+                || gmitMap.Center.Position.Latitude < 53.27
+                || gmitMap.Center.Position.Longitude > -9.006
+                || gmitMap.Center.Position.Latitude < -9.02)
+                gmitMap.Center = gmit; //await gmitMap.TrySetViewAsync(gmit, 19D, 0, 0);
         }
 
         private async void CameraBoundriesAsync(MapControl sender, MapTargetCameraChangedEventArgs args)
@@ -43,13 +59,16 @@ namespace GmitNavUWP
                 Latitude = Util.Building.Old.NORTH,
                 Longitude = Util.Building.Old.WEST
             });
-            if (gmitMap.ActualCamera.Location.Position.Latitude > 53.28 || gmitMap.ActualCamera.Location.Position.Latitude < 53.27) await gmitMap.TrySetViewAsync(gmit, 19D, 0, 0);
-            if (gmitMap.ActualCamera.Location.Position.Longitude > -9.006 || gmitMap.ActualCamera.Location.Position.Latitude < -9.02) await gmitMap.TrySetViewAsync(gmit, 19D, 0, 0);
+            if (gmitMap.ActualCamera.Location.Position.Latitude > 53.28 
+                || gmitMap.ActualCamera.Location.Position.Latitude < 53.27 
+                || gmitMap.ActualCamera.Location.Position.Longitude > -9.006 
+                || gmitMap.ActualCamera.Location.Position.Latitude < -9.02)
+                    await gmitMap.TrySetViewAsync(gmit, 19D, 0, 0);
         }
 
         private void MapZoomControl(MapControl sender, object args)
         {
-            if (sender.ZoomLevel < 16) sender.ZoomLevel = 16;
+            if (sender.ZoomLevel < 18) sender.ZoomLevel = 18;
         }
 
         public async void MapConfigAsync(object sender, RoutedEventArgs e)
