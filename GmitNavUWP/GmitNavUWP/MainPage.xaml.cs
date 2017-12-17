@@ -23,13 +23,14 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json;
 using GmitNavUWP.Service;
 using Windows.Data.Json;
+using System.Collections;
 
 namespace GmitNavUWP
 {
 
     public sealed partial class MainPage : Page
     {
-       
+        List<Room> rooms = new List<Room>();
         public MainPage()
         {
             this.InitializeComponent();
@@ -42,10 +43,22 @@ namespace GmitNavUWP
         public async void TestDb()
         {
             Neo4jDb db = new Neo4jDb();
-            //JsonObject parameters = JsonObject.Parse("");
-            //JsonObject response;
-            String response = await db.CypherAsync("MATCH (r:Room) RETURN r");
-            Debug.WriteLine(response);
+            
+            String response = await db.CypherAsync("MATCH (r:Room) RETURN r", "");
+            var theData = JsonObject.Parse(response);
+            JsonArray data = theData.GetNamedArray("results").GetObjectAt(0).GetNamedArray("data");
+            //var tmp = data.GetObjectAt(0);
+            //var tmp2 = tmp.GetNamedArray("data");
+
+            for (int i = 0; i < data.Count; i++)
+            {
+                JsonArray nodeJSON = data.GetObjectAt(Convert.ToUInt32(i)).GetNamedArray("row");
+                JsonObject node = nodeJSON.GetObjectAt(0);
+                rooms.Add(JsonConvert.DeserializeObject<Room>(node.ToString()));
+            }
+            
+
+            Debug.WriteLine(rooms.Count);
         }
 
         private void CenterBoundries(MapControl sender, object args)
@@ -57,10 +70,10 @@ namespace GmitNavUWP
                 Latitude = Util.Building.Old.NORTH,
                 Longitude = Util.Building.Old.WEST
             });
-            if (gmitMap.ActualCamera.Location.Position.Latitude > 53.28
+            if (gmitMap.Center.Position.Latitude > 53.28
                 || gmitMap.Center.Position.Latitude < 53.27
-                || gmitMap.Center.Position.Longitude > -9.006
-                || gmitMap.Center.Position.Latitude < -9.02)
+                || gmitMap.Center.Position.Longitude > -9.01
+                || gmitMap.Center.Position.Latitude < -9.013)
                 gmitMap.Center = gmit; //await gmitMap.TrySetViewAsync(gmit, 19D, 0, 0);
         }
 

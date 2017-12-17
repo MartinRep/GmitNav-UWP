@@ -10,14 +10,13 @@ namespace GmitNavUWP.Service
 {
     class Neo4jDb
     {
-        public async Task<String> CypherAsync(String cypher)
+        public async Task<String> CypherAsync(String cypher, String parameteres)
         {
-        
             String authInfo = Util.Neo4j.username + ":" + Util.Neo4j.password;
             authInfo = Convert.ToBase64String(Encoding.Default.GetBytes(authInfo));
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("Authorization", "Basic " + authInfo);
-            string postData = @"{""statements"":[{""statement"": """ + cypher + "\"" + @", ""params"":{}}]}";
+            string postData = @"{""statements"":[{""statement"": """ + cypher + "\"" + @"}}]}";
             HttpResponseMessage respond = await Request(Util.Neo4j.uri, postData, headers);
             return await respond.Content.ReadAsStringAsync();
         }
