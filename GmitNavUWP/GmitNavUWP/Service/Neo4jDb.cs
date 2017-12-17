@@ -1,61 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Windows.Data.Json;
+using System.Net.Http;
+
 
 namespace GmitNavUWP.Service
 {
     class Neo4jDb
     {
-        public async Task<JsonObject> CypherAsync(String cypher, JsonObject parameters)
+        public async Task<String> CypherAsync(String cypher)
         {
-            Chilkat.Http http = new Chilkat.Http();
-            
-            //bool success;
+        
+            String authInfo = Util.Neo4j.username + ":" + Util.Neo4j.password;
+            authInfo = Convert.ToBase64String(Encoding.Default.GetBytes(authInfo));
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            headers.Add("Authorization", "Basic " + authInfo);
+            string postData = @"{""statements"":[{""statement"": """ + cypher + "\"" + @", ""params"":{}}]}";
+            HttpResponseMessage respond = await Request(Util.Neo4j.uri, postData, headers);
+            return await respond.Content.ReadAsStringAsync();
+        }
 
-            ////  Any string unlocks the component for the 1st 30-days.
-            //success = http.UnlockComponent("Anything for 30-day trial");
-            //if (success != true)
-            //{
-            //    Debug.WriteLine(http.LastErrorText);
-            //    return;
-            //}
-
-            //  Set the Login and Password properties for authentication.
-            http.Login = Util.Neo4j.username;
-            http.Password = Util.Neo4j.password;
-            JsonObject cypherJson = JsonObject.Parse(cypher);
-            cypherJson.Add("statement", cypherJson);
-            JsonArray request = new JsonArray();
-            request.Add(cypherJson);
-            request.Add(parameters);
-
-            Chilkat.HttpResponse response = await http.PostJsonAsync(Util.Neo4j.uri, request.ToString());
-            JsonObject resultJsonData = JsonObject.Parse(response.BodyStr);
-            // string html = await http.QuickGetStrAsync(Util.Neo4j.uri);
-            //  Note:
-            //if (http.LastMethodSuccess != true)
-            //{
-            //    Debug.WriteLine(http.LastErrorText);
-            //    return null;
-            //}
-
-            //  Examine the HTTP status code returned.
-            //  A status code of 401 is typically returned for "access denied";
-            //  if no login/password is provided, or if the credentials (login/password)
-            //  are incorrect.
-            Debug.WriteLine("HTTP status code for Basic authentication: " + Convert.ToString(http.LastStatus));
-
-            //  Examine the HTML returned for the URL:
-            //Debug.WriteLine(html);
-
-            
-
-
-            return resultJsonData;
+        private async Task<HttpResponseMessage> Request( string pUrl, string pJsonContent, Dictionary<string, string> pHeaders)
+        {
+            HttpClient client = new HttpClient();
+            var httpRequestMessage = new HttpRequestMessage();
+            httpRequestMessage.Method = HttpMethod.Post;
+            httpRequestMessage.RequestUri = new Uri(pUrl);
+            foreach (var head in pHeaders)
+            {
+                httpRequestMessage.Headers.Add(head.Key, head.Value);
+            }
+            HttpContent httpContent = new StringContent(pJsonContent, Encoding.UTF8, "application/json");
+            httpRequestMessage.Content = httpContent;
+            return await client.SendAsync(httpRequestMessage);
         }
     }
 }

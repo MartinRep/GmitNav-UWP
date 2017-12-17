@@ -21,6 +21,8 @@ using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json;
+using GmitNavUWP.Service;
+using Windows.Data.Json;
 
 namespace GmitNavUWP
 {
@@ -34,6 +36,16 @@ namespace GmitNavUWP
             gmitMap.Loaded += MapConfigAsync;
             gmitMap.ZoomLevelChanged += MapZoomControl;
             gmitMap.CenterChanged += CenterBoundries;
+            TestDb();
+        }
+
+        public async void TestDb()
+        {
+            Neo4jDb db = new Neo4jDb();
+            //JsonObject parameters = JsonObject.Parse("");
+            //JsonObject response;
+            String response = await db.CypherAsync("MATCH (r:Room) RETURN r");
+            Debug.WriteLine(response);
         }
 
         private void CenterBoundries(MapControl sender, object args)
