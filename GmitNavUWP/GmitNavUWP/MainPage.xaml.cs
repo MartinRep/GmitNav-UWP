@@ -24,6 +24,7 @@ using Newtonsoft.Json;
 using GmitNavUWP.Service;
 using Windows.Data.Json;
 using System.Collections;
+using Windows.UI.Notifications;
 
 namespace GmitNavUWP
 {
@@ -37,28 +38,36 @@ namespace GmitNavUWP
             gmitMap.Loaded += MapConfigAsync;
             gmitMap.ZoomLevelChanged += MapZoomControl;
             gmitMap.CenterChanged += CenterBoundries;
-            TestDb();
+            Task.Run( () => GetRooms());
         }
 
-        public async void TestDb()
+        public async void GetRooms()
         {
             Neo4jDb db = new Neo4jDb();
-            
-            String response = await db.CypherAsync("MATCH (r:Room) RETURN r", "");
-            var theData = JsonObject.Parse(response);
-            JsonArray data = theData.GetNamedArray("results").GetObjectAt(0).GetNamedArray("data");
-            //var tmp = data.GetObjectAt(0);
-            //var tmp2 = tmp.GetNamedArray("data");
-
-            for (int i = 0; i < data.Count; i++)
+            try
             {
-                JsonArray nodeJSON = data.GetObjectAt(Convert.ToUInt32(i)).GetNamedArray("row");
-                JsonObject node = nodeJSON.GetObjectAt(0);
-                rooms.Add(JsonConvert.DeserializeObject<Room>(node.ToString()));
+                String response = await db.CypherAsync("MATCH (r:Room) RETURN r", "");
+                if (response == null)
+                {
+                    ShowToastNotification("Network Error", "There seems to a problem conneting to the server.");
+                }
+                else
+                {
+                    var theData = JsonObject.Parse(response);
+                    JsonArray data = theData.GetNamedArray("results").GetObjectAt(0).GetNamedArray("data");
+                    for (int i = 0; i < data.Count; i++)
+                    {
+                        JsonArray nodeJSON = data.GetObjectAt(Convert.ToUInt32(i)).GetNamedArray("row");
+                        JsonObject node = nodeJSON.GetObjectAt(0);
+                        rooms.Add(JsonConvert.DeserializeObject<Room>(node.ToString()));
+                    }
+                    Debug.WriteLine(rooms.Count.ToString());
+                }
             }
-            
-
-            Debug.WriteLine(rooms.Count);
+            catch(Exception)
+            {
+                ShowToastNotification("Network Error", "There seems to a problem conneting to the server.");
+            }
         }
 
         private void CenterBoundries(MapControl sender, object args)
@@ -177,6 +186,22 @@ namespace GmitNavUWP
             };
             gmitMap.Layers.Add(LandmarksLayer);
             return index;
+        }
+
+        private void ShowToastNotification(string title, string stringContent)
+        {
+            ToastNotifier ToastNotifier = ToastNotificationManager.CreateToastNotifier();
+            Windows.Data.Xml.Dom.XmlDocument toastXml = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastText02);
+            Windows.Data.Xml.Dom.XmlNodeList toastNodeList = toastXml.GetElementsByTagName("text");
+            toastNodeList.Item(0).AppendChild(toastXml.CreateTextNode(title));
+            toastNodeList.Item(1).AppendChild(toastXml.CreateTextNode(stringContent));
+            Windows.Data.Xml.Dom.IXmlNode toastNode = toastXml.SelectSingleNode("/toast");
+            Windows.Data.Xml.Dom.XmlElement audio = toastXml.CreateElement("audio");
+            audio.SetAttribute("src", "ms-winsoundevent:Notification.SMS");
+
+            ToastNotification toast = new ToastNotification(toastXml);
+            toast.ExpirationTime = DateTime.Now.AddSeconds(4);
+            ToastNotifier.Show(toast);
         }
     }
 }

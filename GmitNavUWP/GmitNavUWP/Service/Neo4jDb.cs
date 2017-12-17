@@ -18,6 +18,7 @@ namespace GmitNavUWP.Service
             headers.Add("Authorization", "Basic " + authInfo);
             string postData = @"{""statements"":[{""statement"": """ + cypher + "\"" + @"}}]}";
             HttpResponseMessage respond = await Request(Util.Neo4j.uri, postData, headers);
+            if (!respond.IsSuccessStatusCode) return null;
             return await respond.Content.ReadAsStringAsync();
         }
 
