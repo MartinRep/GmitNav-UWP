@@ -10,15 +10,15 @@ namespace GmitNavUWP
     public class Room
     {
         [JsonProperty("name")]
-        private String name { get; set; }
+        public String name { get; set; }
         [JsonProperty("aliases")]
-        private List<String> aliases { get; set; } = null;
+        public List<String> aliases { get; set; } = null;
         [JsonProperty("lat")]
-        private Double lat { get; set; }
+        public Double lat { get; set; }
         [JsonProperty("lng")]
-        private Double lng { get; set; }
+        public Double lng { get; set; }
         [JsonProperty("level")]
-        private int level { get; set; }
+        public int level { get; set; }
 
     }
 }

@@ -1,29 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Devices.Geolocation;
 using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.Services.Maps;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Maps;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Navigation;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json;
 using GmitNavUWP.Service;
 using Windows.Data.Json;
-using System.Collections;
 using Windows.UI.Notifications;
 
 namespace GmitNavUWP
@@ -32,12 +20,17 @@ namespace GmitNavUWP
     public sealed partial class MainPage : Page
     {
         List<Room> rooms = new List<Room>();
+        Boolean GotRooms = false;
         public MainPage()
         {
             this.InitializeComponent();
             gmitMap.Loaded += MapConfigAsync;
             gmitMap.ZoomLevelChanged += MapZoomControl;
-            gmitMap.CenterChanged += CenterBoundries;
+            //gmitMap.CenterChanged += CenterBoundries;
+            button0.Click += new RoutedEventHandler((object sender, RoutedEventArgs e) => { ChangeLevel(0); }); 
+            button1.Click += new RoutedEventHandler((object sender, RoutedEventArgs e) => { ChangeLevel(1); }); 
+            button2.Click += new RoutedEventHandler((object sender, RoutedEventArgs e) => { ChangeLevel(2); });
+            button3.Click += new RoutedEventHandler((object sender, RoutedEventArgs e) => { ChangeLevel(3); });
             Task.Run( () => GetRooms());
         }
 
@@ -61,6 +54,7 @@ namespace GmitNavUWP
                         JsonObject node = nodeJSON.GetObjectAt(0);
                         rooms.Add(JsonConvert.DeserializeObject<Room>(node.ToString()));
                     }
+                    GotRooms = true;
                     Debug.WriteLine(rooms.Count.ToString());
                 }
             }
@@ -68,6 +62,29 @@ namespace GmitNavUWP
             {
                 ShowToastNotification("Network Error", "There seems to a problem conneting to the server.");
             }
+        }
+
+        public async Task<int> ShowRoomAsync(String roomNumber)
+        {
+            int index = -1;
+            if (!GotRooms)
+            {
+                ShowToastNotification("Waiting for Response", "Database poll was not succesfull or still in progress");
+            }
+            else
+            {
+                foreach (Room room in rooms)
+                {
+                    if (room.name == roomNumber)
+                    {
+                        index = AddMarker(room.lat, room.lng, room.name);
+                        await gmitMap.TrySetViewAsync(new Geopoint(new BasicGeoposition()
+                        { Latitude = room.lat, Longitude = room.lng }
+                        ), 19D, 0, 0);
+                    }
+                }
+            }
+            return index;
         }
 
         private void CenterBoundries(MapControl sender, object args)
@@ -108,18 +125,16 @@ namespace GmitNavUWP
         public async void MapConfigAsync(object sender, RoutedEventArgs e)
         {
             gmitMap.LandmarksVisible = false;
-            
-            //index = await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/dgmit0.png")); //SubLevel
-            int index = await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/dgmit0.png")); //GroundLevel
-            //index = await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/dgmit0.png")); // First Level
-            //index = await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/dgmit0.png")); // Second Level
-            // dev only
-            gmitMap.Layers.ElementAt(index).Visible = true; //Making Layer visible
-            index = AddMarker(53.27784461170297, -9.010525792837143, "993");
-            index = AddMarker(53.27798093343066, -9.011201709672605, "994");
-            index = AddMarker(53.27782616819727, -9.01072964080413, "966");
-            index = AddMarker(53.27927436396021, -9.009757339964608, "105");
-            index = AddMarker(53.27941629407834, -9.011182934045792, "145");
+            int index = await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit0.png")); //GroundLevel
+            //index = await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit1.png")); // First Level
+            //index = await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit2.png")); // Second Level
+            //index = await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit3.png")); //SubLevel
+            gmitMap.Layers.ElementAt(0).Visible = true; //Making initial ground Layer visible
+
+            //dev only
+            await Task.Delay(5000);
+            while (!GotRooms) await Task.Delay(500);
+            await ShowRoomAsync("114b");
         }
 
         public async Task<int> AddMapOverlayAsync(Double latitude, Double longtitude, Uri img)
@@ -152,7 +167,7 @@ namespace GmitNavUWP
             GmitFloorMaps.Add(mapBillboard);  
             var LandmarksPhotoLayer = new MapElementsLayer
             {
-                ZIndex = index,
+                ZIndex = 0,
                 MapElements = GmitFloorMaps,
                 Visible = false
             };
@@ -175,7 +190,7 @@ namespace GmitNavUWP
             {
                 Location = snPoint,
                 NormalizedAnchorPoint = new Point(0D, 0D),
-                ZIndex = 0,
+                ZIndex = 1,
                 Title = title
             };
             MyLandmarks.Add(spaceNeedleIcon);
@@ -202,6 +217,15 @@ namespace GmitNavUWP
             ToastNotification toast = new ToastNotification(toastXml);
             toast.ExpirationTime = DateTime.Now.AddSeconds(4);
             ToastNotifier.Show(toast);
+        }
+
+        private void ChangeLevel(int level)
+        {
+            for(int i = 0; i <= 3; i++)
+            {
+                if (i == level) gmitMap.Layers.ElementAt(i).Visible = true;
+                else gmitMap.Layers.ElementAt(i).Visible = false;
+            }
         }
     }
 }
