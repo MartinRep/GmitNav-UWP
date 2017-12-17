@@ -9,17 +9,18 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Margin="0,0,0,3">
-        <Maps:MapControl x:Name="gmitMap"  MapServiceToken="BthYfWNgDGiuinuOJeNp~K_8dBE3ryuxHKZfHV5ZeqA~AtnGcy42Rh5I0ywC04N9QXM-DPPwy8Yd5u0UAm81dUpcAhceWvAwynV7oHIsDinl" Margin="0,0,0,0">
-            <StackPanel x:Name="Levels" Width="82" >
-                <Button x:Name="button2" Content="Level 2" HorizontalAlignment="Left" RequestedTheme="Light" VerticalContentAlignment="Center" />
+        <Maps:MapControl x:Name="gmitMap"  MapServiceToken="BthYfWNgDGiuinuOJeNp~K_8dBE3ryuxHKZfHV5ZeqA~AtnGcy42Rh5I0ywC04N9QXM-DPPwy8Yd5u0UAm81dUpcAhceWvAwynV7oHIsDinl" Width="auto" Height="auto" Grid.RowSpan="3">
+            <StackPanel x:Name="Levels" Height="765" VerticalAlignment="Bottom">
+                <Button x:Name="button2" Content="Level 2" HorizontalAlignment="Left" RequestedTheme="Light" VerticalContentAlignment="Center" VerticalAlignment="Bottom"/>
                 <Button x:Name="button1" Content="Level 1" HorizontalAlignment="Left" RequestedTheme="Light" VerticalContentAlignment="Center" />
                 <Button x:Name="button0" Content="Level 0" HorizontalAlignment="Left" RequestedTheme="Light" VerticalContentAlignment="Center"/>
                 <Button x:Name="button3" Content="Level Sub" HorizontalAlignment="Left" RequestedTheme="Light" VerticalContentAlignment="Center" />
             </StackPanel>
-            <StackPanel VerticalAlignment="Bottom" Height="765" Width="200" Orientation="Vertical">
+
+            <!--<StackPanel VerticalAlignment="Bottom" Height="765" Width="200" Orientation="Vertical">
                 <Button x:Name="search" Content="Room Lookup" HorizontalAlignment="Left" RequestedTheme="Light" VerticalContentAlignment="Bottom" VerticalAlignment="Bottom" />
 
-            </StackPanel>
+            </StackPanel>-->
 
 
         </Maps:MapControl>

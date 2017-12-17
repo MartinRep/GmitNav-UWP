@@ -31,7 +31,13 @@ namespace GmitNavUWP
             button1.Click += new RoutedEventHandler((object sender, RoutedEventArgs e) => { ChangeLevel(1); }); 
             button2.Click += new RoutedEventHandler((object sender, RoutedEventArgs e) => { ChangeLevel(2); });
             button3.Click += new RoutedEventHandler((object sender, RoutedEventArgs e) => { ChangeLevel(3); });
+            gmitMap.MapElementClick += GmitMap_MapElementClick;
             Task.Run( () => GetRooms());
+        }
+
+        private void GmitMap_MapElementClick(MapControl sender, MapElementClickEventArgs args)
+        {
+            Debug.WriteLine("Lat: " + args.Location.Position.Latitude +" Long:"+args.Location.Position.Longitude);
         }
 
         public async void GetRooms()
@@ -125,22 +131,21 @@ namespace GmitNavUWP
         public async void MapConfigAsync(object sender, RoutedEventArgs e)
         {
             gmitMap.LandmarksVisible = false;
-            int index = await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit0.png")); //GroundLevel
-            //index = await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit1.png")); // First Level
-            //index = await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit2.png")); // Second Level
-            //index = await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit3.png")); //SubLevel
-            gmitMap.Layers.ElementAt(0).Visible = true; //Making initial ground Layer visible
+            await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit0.png")); //GroundLevel
+            await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit1.png")); // First Level
+            await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit2.png")); // Second Level
+            await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit3.png")); //SubLevel
+            ChangeLevel(0); //Set initial level to Ground Level
 
             //dev only
-            await Task.Delay(5000);
-            while (!GotRooms) await Task.Delay(500);
-            await ShowRoomAsync("114b");
+            //await Task.Delay(5000);
+            //while (!GotRooms) await Task.Delay(500);
+            //await ShowRoomAsync("114b");
         }
 
         public async Task<int> AddMapOverlayAsync(Double latitude, Double longtitude, Uri img)
         {
             // Defining position for image overlay. Map View ZoomLevel defines the images size relative to map
-            //MapControl tmp = gmitMap;
             Geopoint position = new Geopoint(new BasicGeoposition()
             {
                 Latitude = latitude,
@@ -151,6 +156,7 @@ namespace GmitNavUWP
             while (gmitMap.ZoomLevel < 18.9)
             {
                 await gmitMap.TrySetViewAsync(position, 19D, 0, 0);
+                await Task.Delay(500);
                 Debug.WriteLine(gmitMap.ZoomLevel);
             }
             // Create MapBillboard Image.
@@ -163,8 +169,10 @@ namespace GmitNavUWP
                 Image = imgStream,
             };
             int index = gmitMap.Layers.Count;
-            var GmitFloorMaps = new List<MapElement>();
-            GmitFloorMaps.Add(mapBillboard);  
+            var GmitFloorMaps = new List<MapElement>
+            {
+                mapBillboard
+            };
             var LandmarksPhotoLayer = new MapElementsLayer
             {
                 ZIndex = 0,
@@ -221,10 +229,23 @@ namespace GmitNavUWP
 
         private void ChangeLevel(int level)
         {
-            for(int i = 0; i <= 3; i++)
+            List<Button> buttons = new List<Button>();
+            buttons.Add(button0);
+            buttons.Add(button1);
+            buttons.Add(button2);
+            buttons.Add(button3);
+            for (int i = 0; i <= 3; i++)
             {
-                if (i == level) gmitMap.Layers.ElementAt(i).Visible = true;
-                else gmitMap.Layers.ElementAt(i).Visible = false;
+                if (i == level)
+                {
+                    gmitMap.Layers.ElementAt(i).Visible = true;
+                    buttons.ElementAt(i).IsEnabled = false;
+                }
+                else
+                {
+                    gmitMap.Layers.ElementAt(i).Visible = false;
+                    buttons.ElementAt(i).IsEnabled = true;
+                }
             }
         }
     }
