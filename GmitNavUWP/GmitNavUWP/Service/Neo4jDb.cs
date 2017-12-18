@@ -12,16 +12,20 @@ namespace GmitNavUWP.Service
     {
         public async Task<String> CypherAsync(String cypher, String parameteres)
         {
+            //Creating basic authentication header.
             String authInfo = Util.Neo4j.username + ":" + Util.Neo4j.password;
             authInfo = Convert.ToBase64String(Encoding.Default.GetBytes(authInfo));
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("Authorization", "Basic " + authInfo);
+            // Db Query
             string postData = @"{""statements"":[{""statement"": """ + cypher + "\"" + @"}}]}";
+            // Actuall call to server
             HttpResponseMessage respond = await Request(Util.Neo4j.uri, postData, headers);
-            if (!respond.IsSuccessStatusCode) return null;
+            if (!respond.IsSuccessStatusCode) return null;  // Error handling 
             return await respond.Content.ReadAsStringAsync();
         }
 
+        // Simle HttpClient method. General
         private async Task<HttpResponseMessage> Request( string pUrl, string pJsonContent, Dictionary<string, string> pHeaders)
         {
             HttpClient client = new HttpClient();

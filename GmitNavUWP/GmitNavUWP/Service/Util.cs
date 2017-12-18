@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace GmitNavUWP
 {
+    // Util Class with all the application static variables.
     public class Util
     {
         public static Double MAX_ZOOM = 19.9;

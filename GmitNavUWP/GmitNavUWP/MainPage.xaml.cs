@@ -21,11 +21,11 @@ namespace GmitNavUWP
     
     public sealed partial class MainPage : Page
     {
-        List<Room> rooms = new List<Room>();
-        Boolean GotRooms = false;
+        List<Room> rooms = new List<Room>();    //List of all GMIT Rooms. Populated via GetRooms() 
+        Boolean GotRooms = false;   //If data retreived from server are succesfull and List populated becames True
         TextBox searchBox;
-        int searchedRoomLevel = 255;
-        Geopoint gmit = new Geopoint(new BasicGeoposition()
+        int searchedRoomLevel = 255;    //Last room number searched, used in ChangeLevel()
+        Geopoint gmit = new Geopoint(new BasicGeoposition() //center of GMIT location 
         {
             Latitude = Util.Gmit.LAT,
             Longitude = Util.Gmit.LNG
@@ -34,16 +34,17 @@ namespace GmitNavUWP
         {
             this.InitializeComponent();
             searchBox = FindName("RoomTextBox") as TextBox;
-            gmitMap.Loaded += MapConfigAsync;
-            button0.Click += new RoutedEventHandler((object sender, RoutedEventArgs e) => { ChangeLevel(0); }); 
+            gmitMap.Loaded += MapConfigAsync;   //Listener for Map loaded.
+            button0.Click += new RoutedEventHandler((object sender, RoutedEventArgs e) => { ChangeLevel(0); }); //Lesteners for change Level Buttons
             button1.Click += new RoutedEventHandler((object sender, RoutedEventArgs e) => { ChangeLevel(1); }); 
             button2.Click += new RoutedEventHandler((object sender, RoutedEventArgs e) => { ChangeLevel(2); });
             button3.Click += new RoutedEventHandler((object sender, RoutedEventArgs e) => { ChangeLevel(3); });
-            searchBox.KeyDown += SearchBox_KeyDown;
-            gmitMap.MapElementClick += GmitMap_MapElementClick;
-            Task.Run( () => GetRooms());
+            searchBox.KeyDown += SearchBox_KeyDown; // Listener for Enter and Escape buttons in searchBox
+            gmitMap.MapElementClick += GmitMap_MapElementClick; //For calibration purposes, to get Locations for maps and buttons
+            Task.Run( () => GetRooms());    //Runs in background Rooms details retreive from server
         }
 
+        // Listener for Enter and Escape buttons in searchBox
         private void SearchBox_KeyDown(object sender, KeyRoutedEventArgs e)
         {
             if (e.Key == VirtualKey.Enter)
@@ -53,7 +54,7 @@ namespace GmitNavUWP
             else if(e.Key == VirtualKey.Escape)
             {
                 searchBox.Text = "";
-                if(gmitMap.Layers.Count > 4)
+                if(gmitMap.Layers.Count > 4)    //Checks if there is an Icon already and removes it.
                 {
                     gmitMap.Layers.ElementAt(4).Visible = false;
                     gmitMap.Layers.RemoveAt(4);
@@ -62,11 +63,13 @@ namespace GmitNavUWP
             }
         }
 
+        //Dev only
         private void GmitMap_MapElementClick(MapControl sender, MapElementClickEventArgs args)
         {
             Debug.WriteLine("Lat: " + args.Location.Position.Latitude +" Long:"+args.Location.Position.Longitude);
         }
 
+        // Gets Neo4jDb to retreive via HttpClient and REST architecture Rooms from server
         public async void GetRooms()
         {
             Neo4jDb db = new Neo4jDb();
@@ -79,6 +82,12 @@ namespace GmitNavUWP
                 }
                 else
                 {
+                    /* construct a Json Request from Neo4j Database. Json format:
+                     * {"statements": 
+                        	[{"statement":"match (r) return r;", "params":{}}]
+                        }
+                     * 
+                     */
                     var theData = JsonObject.Parse(response);
                     JsonArray data = theData.GetNamedArray("results").GetObjectAt(0).GetNamedArray("data");
                     for (int i = 0; i < data.Count; i++)
@@ -87,9 +96,7 @@ namespace GmitNavUWP
                         JsonObject node = nodeJSON.GetObjectAt(0);
                         rooms.Add(JsonConvert.DeserializeObject<Room>(node.ToString()));
                     }
-                    GotRooms = true;
-                    Debug.WriteLine(rooms.Count.ToString());
-                }
+                    GotRooms = true;                   }
             }
             catch(Exception)
             {
@@ -97,6 +104,7 @@ namespace GmitNavUWP
             }
         }
 
+        // Look for the Room with name in Rooms array
         public Room FindRoom(String name)
         {
             foreach (Room room in rooms)
@@ -108,6 +116,8 @@ namespace GmitNavUWP
             }
             return null;
         }
+
+        // Takes in the Room and display the Icon on map
         public async Task<int> ShowRoomAsync(Room room)
         {
             int index = -1;
@@ -117,16 +127,17 @@ namespace GmitNavUWP
             }
             else
             {
-                index = AddMarker(room.lat, room.lng, room.name);
-                searchedRoomLevel = room.level;
-                ChangeLevel(room.level);
+                index = AddMarker(room.lat, room.lng, room.name);   //Call to create and display the marker icon
+                searchedRoomLevel = room.level; // For change of Level purposes. Icon only appears on the corrent level
+                ChangeLevel(room.level);    
                 searchBox.Text = "";
                 await gmitMap.TrySetViewAsync(new Geopoint(new BasicGeoposition()
-                { Latitude = room.lat, Longitude = room.lng }), 19D, 0, 0);
+                { Latitude = room.lat, Longitude = room.lng }), 19D, 0, 0);         //Asych method to change view inside Bing maps
             }
             return index;
         }
 
+        // EventHandler to keep user inside GMIT boundiers. Causing bit trouble at moment. Dissabled for now.
         private void CenterBoundries(MapControl sender, object args)
         {
             Debug.WriteLine(gmitMap.Center.Position.Latitude);
@@ -143,6 +154,7 @@ namespace GmitNavUWP
                 gmitMap.Center = gmit; //await gmitMap.TrySetViewAsync(gmit, 19D, 0, 0);
         }
 
+        // EventHandler for Map Zoom level. Restricting users Zoom level
         private void MapZoomControl(MapControl sender, object args)
         {
             Debug.WriteLine(sender.ZoomLevel);
@@ -150,6 +162,8 @@ namespace GmitNavUWP
             else if (sender.ZoomLevel > Util.MAX_ZOOM) sender.ZoomLevel = Util.MAX_ZOOM;
         }
 
+
+        // Initial Map configuration. All the Map overlays are loaded and placed in right GPS coordinates
         public async void MapConfigAsync(object sender, RoutedEventArgs e)
         {
             gmitMap.LandmarksVisible = false;
@@ -158,24 +172,27 @@ namespace GmitNavUWP
             await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit2.png")); // Second Level
             await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit3.png")); //SubLevel
             ChangeLevel(0); //Set initial level to Ground Level
+            //Location of Change Level Buttons on Map
             Geopoint buttonsGeo = new Geopoint(new BasicGeoposition()
             {
                 Latitude = Util.Buttons.LAT,
                 Longitude = Util.Buttons.LNG
             });
-            MapControl.SetLocation(Levels, buttonsGeo);
+            MapControl.SetLocation(Levels, buttonsGeo); //Setting the location for buttons StackPanel
             MapControl.SetNormalizedAnchorPoint(Levels, new Point(0D,0D));
-            Levels.Visibility = Visibility.Visible;
+            Levels.Visibility = Visibility.Visible;     //Making them visible
             await gmitMap.TrySetViewAsync(gmit, 19D, 0, 0);
-            gmitMap.ZoomLevelChanged += MapZoomControl;
-            SearchButton.Click += SearchButton_ClickAsync;
-            LoadingIndicator.IsActive = false;
-            SearchPanel.Visibility = Visibility.Visible;
-            searchBox.Focus(FocusState.Pointer);
-
+            gmitMap.ZoomLevelChanged += MapZoomControl; // Registering EventListener for Map change of Zoom
+            SearchButton.Click += SearchButton_ClickAsync;  // Registering EventListener for Search Button
+            LoadingIndicator.IsActive = false;      // App launch Loading Indicator (Left top corner) being disalbed after map is configured/
+            SearchPanel.Visibility = Visibility.Visible;    //Search Panel with TextBox and Search Button
+            searchBox.Focus(FocusState.Pointer);    // TextBox Autofocus
+            // Currently disabled
             //gmitMap.CenterChanged += CenterBoundries;  //GPS locations calibration needed
         }
 
+
+        // EventHandler for Search Button
         private async void SearchButton_ClickAsync(object sender, RoutedEventArgs e)
         {
            if(!GotRooms)
@@ -187,12 +204,13 @@ namespace GmitNavUWP
                 if (destRoom != null)
                 {
                     var count = gmitMap.Layers.Count;
+                    // If there is a previously searched romm icon already on the map, hide and delete it.
                     if (count > 4)
                     {
                         gmitMap.Layers.ElementAt(count - 1).Visible = false;
                         gmitMap.Layers.RemoveAt(count -1);   //Previous Room icon erase
                         searchedRoomLevel = 255;
-                    } else
+                    } else  // First time room search
                     {
                         searchedRoomLevel = destRoom.level;
                     }
@@ -205,7 +223,8 @@ namespace GmitNavUWP
             }
         }
 
-
+        // Funtion to add Image overlay to MapControl. Zoom level is very important when inserting picture overlay, as it determines the size and location of overlay.
+        // It corespond with actual view on the map. The change view method of Bing maps is Async, making it difficult to place image correctly.
         public async Task<int> AddMapOverlayAsync(Double latitude, Double longtitude, Uri img)
         {
             // Defining position for image overlay. Map View ZoomLevel defines the images size relative to map
@@ -242,11 +261,12 @@ namespace GmitNavUWP
                 MapElements = GmitFloorMaps,
                 Visible = false
             };
+            // Image is added as an new Layer to MapControl. ZIndex must be 0, so Icon with Zindex 1 will be on top of overlay.
             gmitMap.Layers.Add(LandmarksPhotoLayer);
-
             return index;
         }
 
+        // Method for adding Room Location Icon
         public int AddMarker(Double latitude, Double longtitude, String title)
         {
             int index = gmitMap.Layers.Count;
@@ -274,6 +294,7 @@ namespace GmitNavUWP
             return index;
         }
 
+        // Method to display Toast messages, mostly Errors, with sound and 4 seconds duration.
         private void ShowToastNotification(string title, string stringContent)
         {
             ToastNotifier ToastNotifier = ToastNotificationManager.CreateToastNotifier();
@@ -284,12 +305,12 @@ namespace GmitNavUWP
             Windows.Data.Xml.Dom.IXmlNode toastNode = toastXml.SelectSingleNode("/toast");
             Windows.Data.Xml.Dom.XmlElement audio = toastXml.CreateElement("audio");
             audio.SetAttribute("src", "ms-winsoundevent:Notification.SMS");
-
             ToastNotification toast = new ToastNotification(toastXml);
             toast.ExpirationTime = DateTime.Now.AddSeconds(4);
             ToastNotifier.Show(toast);
         }
 
+        // Method to change Level of Map overlays. Ensuring the Room icon is only displayed with right Level.
         private void ChangeLevel(int level)
         {
             List<Button> buttons = new List<Button>();
@@ -297,24 +318,23 @@ namespace GmitNavUWP
             buttons.Add(button1);
             buttons.Add(button2);
             buttons.Add(button3);
+            // Disabling Button of currently selected Level
             for (int i = 0; i <= 3; i++)
             {
                 if (i == level)
                 {
-                    gmitMap.Layers.ElementAt(i).Visible = true;
-                    buttons.ElementAt(i).IsEnabled = false;
+                    gmitMap.Layers.ElementAt(i).Visible = true;     // Showing Map overlay
+                    buttons.ElementAt(i).IsEnabled = false;         //Disabling current level button
                 }
                 else
                 {
-                    gmitMap.Layers.ElementAt(i).Visible = false;
-                    buttons.ElementAt(i).IsEnabled = true;
+                    gmitMap.Layers.ElementAt(i).Visible = false;     //Hiding rest of the map Overlays
+                    buttons.ElementAt(i).IsEnabled = true;          //Enabling the rest of the level buttons
                 }
             }
-            if (gmitMap.Layers.Count > 4)
+            if (gmitMap.Layers.Count > 4)       //if previous searched room icon is being displayed
             {
-                Debug.WriteLine(searchedRoomLevel);
-                Debug.WriteLine(level);
-                if (searchedRoomLevel != level)
+                if (searchedRoomLevel != level)     //Checking the searched room level is of Level currently displaying, if not hides Icon
                 {
                     gmitMap.Layers.ElementAt(4).Visible = false;
                 }
