@@ -9,18 +9,19 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Margin="0,0,0,3">
-        <Maps:MapControl x:Name="gmitMap"  MapServiceToken="BthYfWNgDGiuinuOJeNp~K_8dBE3ryuxHKZfHV5ZeqA~AtnGcy42Rh5I0ywC04N9QXM-DPPwy8Yd5u0UAm81dUpcAhceWvAwynV7oHIsDinl" Width="auto" Height="auto" Grid.RowSpan="3">
-            <StackPanel x:Name="Levels" Height="765" VerticalAlignment="Bottom">
+
+        <Maps:MapControl x:Name="gmitMap" VerticalContentAlignment="Bottom" MapServiceToken="BthYfWNgDGiuinuOJeNp~K_8dBE3ryuxHKZfHV5ZeqA~AtnGcy42Rh5I0ywC04N9QXM-DPPwy8Yd5u0UAm81dUpcAhceWvAwynV7oHIsDinl" Width="auto" Height="auto" Grid.RowSpan="3">
+            <StackPanel x:Name="Levels" Height="765" VerticalAlignment="Bottom" Visibility="Collapsed">
                 <Button x:Name="button2" Content="Level 2" HorizontalAlignment="Left" RequestedTheme="Light" VerticalContentAlignment="Center" VerticalAlignment="Bottom"/>
                 <Button x:Name="button1" Content="Level 1" HorizontalAlignment="Left" RequestedTheme="Light" VerticalContentAlignment="Center" />
                 <Button x:Name="button0" Content="Level 0" HorizontalAlignment="Left" RequestedTheme="Light" VerticalContentAlignment="Center"/>
                 <Button x:Name="button3" Content="Level Sub" HorizontalAlignment="Left" RequestedTheme="Light" VerticalContentAlignment="Center" />
             </StackPanel>
 
-            <!--<StackPanel VerticalAlignment="Bottom" Height="765" Width="200" Orientation="Vertical">
-                <Button x:Name="search" Content="Room Lookup" HorizontalAlignment="Left" RequestedTheme="Light" VerticalContentAlignment="Bottom" VerticalAlignment="Bottom" />
-
-            </StackPanel>-->
+            <StackPanel VerticalAlignment="Bottom" Height="auto" Width="auto" Orientation="Horizontal">
+                <TextBox x:Name="RoomTextBox" HorizontalAlignment="Stretch" PlaceholderText="Room Number" HorizontalContentAlignment="Stretch" AllowFocusOnInteraction="True"/>
+                <Button x:Name="SearchButton" Content="Search" HorizontalAlignment="Left" RequestedTheme="Light" VerticalContentAlignment="Bottom" VerticalAlignment="Bottom" />
+            </StackPanel>
 
 
         </Maps:MapControl>

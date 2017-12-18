@@ -8,8 +8,8 @@ namespace GmitNavUWP
 {
     public class Util
     {
-        public static float MAX_ZOOM = 20f;
-        public static float MIN_ZOOM = 15f;
+        public static Double MAX_ZOOM = 19.9;
+        public static Double MIN_ZOOM = 18.3;
         public static String DATAFILE = "rooms.json";
 
         public class Neo4j
@@ -21,8 +21,8 @@ namespace GmitNavUWP
 
         public class Gmit
         {
-            public static double LAT = 53.2785;
-            public static double LNG = -9.01;
+            public static double LAT = 53.2786283857855;
+            public static double LNG = -9.01045782475004;
         }
 
         public class CameraBoundries
@@ -49,6 +49,13 @@ namespace GmitNavUWP
                 public static double NORTH = 53.278235;
                 public static double EAST = -9.00911;
             }
+
+        }
+
+        public class Buttons
+        {
+            public static double LAT = 53.2795008798393;
+            public static double LNG = -9.01174496872789;
         }
     }
 }

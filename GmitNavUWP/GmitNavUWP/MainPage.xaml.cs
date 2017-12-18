@@ -13,26 +13,46 @@ using Newtonsoft.Json;
 using GmitNavUWP.Service;
 using Windows.Data.Json;
 using Windows.UI.Notifications;
+using Windows.UI.Xaml.Input;
+using Windows.System;
 
 namespace GmitNavUWP
 {
-
+    
     public sealed partial class MainPage : Page
     {
         List<Room> rooms = new List<Room>();
         Boolean GotRooms = false;
+        TextBox searchBox;
+        Geopoint gmit = new Geopoint(new BasicGeoposition()
+        {
+            Latitude = Util.Gmit.LAT,
+            Longitude = Util.Gmit.LNG
+        });
         public MainPage()
         {
             this.InitializeComponent();
+            searchBox = FindName("RoomTextBox") as TextBox;
             gmitMap.Loaded += MapConfigAsync;
-            gmitMap.ZoomLevelChanged += MapZoomControl;
-            //gmitMap.CenterChanged += CenterBoundries;
             button0.Click += new RoutedEventHandler((object sender, RoutedEventArgs e) => { ChangeLevel(0); }); 
             button1.Click += new RoutedEventHandler((object sender, RoutedEventArgs e) => { ChangeLevel(1); }); 
             button2.Click += new RoutedEventHandler((object sender, RoutedEventArgs e) => { ChangeLevel(2); });
             button3.Click += new RoutedEventHandler((object sender, RoutedEventArgs e) => { ChangeLevel(3); });
+            searchBox.KeyDown += SearchBox_KeyDown;
             gmitMap.MapElementClick += GmitMap_MapElementClick;
             Task.Run( () => GetRooms());
+        }
+
+        private void SearchBox_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == VirtualKey.Enter)
+            {
+                SearchButton_ClickAsync(sender, e);
+            }
+            else if(e.Key == VirtualKey.Escape)
+            {
+                searchBox.Text = "";
+            }
         }
 
         private void GmitMap_MapElementClick(MapControl sender, MapElementClickEventArgs args)
@@ -70,7 +90,18 @@ namespace GmitNavUWP
             }
         }
 
-        public async Task<int> ShowRoomAsync(String roomNumber)
+        public Room FindRoom(String name)
+        {
+            foreach (Room room in rooms)
+            {
+                if (room.name == name)
+                {
+                    return room;
+                }
+            }
+            return null;
+        }
+        public async Task<int> ShowRoomAsync(Room room)
         {
             int index = -1;
             if (!GotRooms)
@@ -79,16 +110,12 @@ namespace GmitNavUWP
             }
             else
             {
-                foreach (Room room in rooms)
-                {
-                    if (room.name == roomNumber)
-                    {
-                        index = AddMarker(room.lat, room.lng, room.name);
-                        await gmitMap.TrySetViewAsync(new Geopoint(new BasicGeoposition()
-                        { Latitude = room.lat, Longitude = room.lng }
-                        ), 19D, 0, 0);
-                    }
-                }
+                index = AddMarker(room.lat, room.lng, room.name);
+                ChangeLevel(room.level);
+                searchBox.Text = "";
+                await gmitMap.TrySetViewAsync(new Geopoint(new BasicGeoposition()
+                { Latitude = room.lat, Longitude = room.lng }), 19D, 0, 0);
+
             }
             return index;
         }
@@ -102,46 +129,75 @@ namespace GmitNavUWP
                 Latitude = Util.Building.Old.NORTH,
                 Longitude = Util.Building.Old.WEST
             });
-            if (gmitMap.Center.Position.Latitude > 53.28
-                || gmitMap.Center.Position.Latitude < 53.27
-                || gmitMap.Center.Position.Longitude > -9.01
-                || gmitMap.Center.Position.Latitude < -9.013)
+            if (gmitMap.Center.Position.Latitude > Util.CameraBoundries.WEST
+                || gmitMap.Center.Position.Latitude < Util.CameraBoundries.EAST
+                || gmitMap.Center.Position.Longitude > Util.CameraBoundries.NORTH
+                || gmitMap.Center.Position.Latitude < Util.CameraBoundries.SOUTH)
                 gmitMap.Center = gmit; //await gmitMap.TrySetViewAsync(gmit, 19D, 0, 0);
-        }
-
-        private async void CameraBoundriesAsync(MapControl sender, MapTargetCameraChangedEventArgs args)
-        {
-            var gmit = new Geopoint(new BasicGeoposition()
-            {
-                Latitude = Util.Building.Old.NORTH,
-                Longitude = Util.Building.Old.WEST
-            });
-            if (gmitMap.ActualCamera.Location.Position.Latitude > 53.28 
-                || gmitMap.ActualCamera.Location.Position.Latitude < 53.27 
-                || gmitMap.ActualCamera.Location.Position.Longitude > -9.006 
-                || gmitMap.ActualCamera.Location.Position.Latitude < -9.02)
-                    await gmitMap.TrySetViewAsync(gmit, 19D, 0, 0);
         }
 
         private void MapZoomControl(MapControl sender, object args)
         {
-            if (sender.ZoomLevel < 18) sender.ZoomLevel = 18;
+            Debug.WriteLine(sender.ZoomLevel);
+            if (sender.ZoomLevel < Util.MIN_ZOOM) sender.ZoomLevel = Util.MIN_ZOOM;
+            else if (sender.ZoomLevel > Util.MAX_ZOOM) sender.ZoomLevel = Util.MAX_ZOOM;
         }
 
         public async void MapConfigAsync(object sender, RoutedEventArgs e)
         {
             gmitMap.LandmarksVisible = false;
+            gmitMap.Visibility = Visibility.Visible;
             await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit0.png")); //GroundLevel
             await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit1.png")); // First Level
             await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit2.png")); // Second Level
             await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit3.png")); //SubLevel
             ChangeLevel(0); //Set initial level to Ground Level
-
-            //dev only
-            //await Task.Delay(5000);
-            //while (!GotRooms) await Task.Delay(500);
-            //await ShowRoomAsync("114b");
+            Geopoint buttonsGeo = new Geopoint(new BasicGeoposition()
+            {
+                Latitude = Util.Buttons.LAT,
+                Longitude = Util.Buttons.LNG
+            });
+            MapControl.SetLocation(Levels, buttonsGeo);
+            MapControl.SetNormalizedAnchorPoint(Levels, new Point(0D,0D));
+            Levels.Visibility = Visibility.Visible;
+            await gmitMap.TrySetViewAsync(gmit, 19D, 0, 0);
+            gmitMap.ZoomLevelChanged += MapZoomControl;
+            SearchButton.Click += SearchButton_ClickAsync;
+            //gmitMap.CenterChanged += CenterBoundries;  //GPS locations calibration needed
         }
+
+        private async void SearchButton_ClickAsync(object sender, RoutedEventArgs e)
+        {
+           if(!GotRooms)
+            {
+                ShowToastNotification("Rooms Database", "Error accessing Rooms Database. Polling in progress. Wait and Try again...");
+            }else
+            {
+                Room destRoom = FindRoom(searchBox.Text);
+                if (destRoom != null)
+                {
+                    try
+                    {
+                        var count = gmitMap.Children.Count;
+                        if (gmitMap.Layers.Count > 4)
+                        {
+                            gmitMap.Layers.ElementAt(gmitMap.Layers.Count - 1).Visible = false;
+                            gmitMap.Layers.RemoveAt(gmitMap.Layers.Count -1);   //Previous Room icon erase
+                        }
+                    }
+                    catch(Exception exep)
+                    {
+                        Debug.WriteLine(exep.Message);
+                    }
+                    await ShowRoomAsync(destRoom);
+                }
+                else
+                {
+                    ShowToastNotification("Room Name", "Room number / Alias doesn't exist in the Database");
+                }
+            }
+        }
+
 
         public async Task<int> AddMapOverlayAsync(Double latitude, Double longtitude, Uri img)
         {
@@ -155,8 +211,8 @@ namespace GmitNavUWP
             //Making sure the view ZoomLevel is correct for inserting image as overlay.
             while (gmitMap.ZoomLevel < 18.9)
             {
-                await gmitMap.TrySetViewAsync(position, 19D, 0, 0);
-                await Task.Delay(500);
+                await gmitMap.TrySetViewAsync(gmit, 19D, 0, 0);
+                await Task.Delay(1000);
                 Debug.WriteLine(gmitMap.ZoomLevel);
             }
             // Create MapBillboard Image.
@@ -180,7 +236,7 @@ namespace GmitNavUWP
                 Visible = false
             };
             gmitMap.Layers.Add(LandmarksPhotoLayer);
-            await gmitMap.TrySetViewAsync(position, 19D, 0, 0);
+
             return index;
         }
 
@@ -204,7 +260,7 @@ namespace GmitNavUWP
             MyLandmarks.Add(spaceNeedleIcon);
             var LandmarksLayer = new MapElementsLayer
             {
-                ZIndex = index,
+                ZIndex = 1,
                 MapElements = MyLandmarks
             };
             gmitMap.Layers.Add(LandmarksLayer);
