@@ -8,8 +8,7 @@
     xmlns:Maps="using:Windows.UI.Xaml.Controls.Maps"
     mc:Ignorable="d">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Margin="0,0,0,3">
-
+    <Grid Background="Snow">
         <Maps:MapControl x:Name="gmitMap" MapServiceToken="BthYfWNgDGiuinuOJeNp~K_8dBE3ryuxHKZfHV5ZeqA~AtnGcy42Rh5I0ywC04N9QXM-DPPwy8Yd5u0UAm81dUpcAhceWvAwynV7oHIsDinl">
             <ProgressRing x:Name="LoadingIndicator" Height="40" Width="40" IsActive="True"/>    
             <StackPanel x:Name="Levels" Height="765" VerticalAlignment="Bottom" Visibility="Collapsed">

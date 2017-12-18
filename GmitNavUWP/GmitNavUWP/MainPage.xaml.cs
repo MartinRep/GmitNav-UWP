@@ -164,6 +164,7 @@ namespace GmitNavUWP
             SearchButton.Click += SearchButton_ClickAsync;
             LoadingIndicator.IsActive = false;
             SearchPanel.Visibility = Visibility.Visible;
+            searchBox.Focus(FocusState.Pointer);
 
             //gmitMap.CenterChanged += CenterBoundries;  //GPS locations calibration needed
         }
