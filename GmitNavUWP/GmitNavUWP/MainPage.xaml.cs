@@ -24,6 +24,7 @@ namespace GmitNavUWP
         List<Room> rooms = new List<Room>();
         Boolean GotRooms = false;
         TextBox searchBox;
+        int searchedRoomLevel = 255;
         Geopoint gmit = new Geopoint(new BasicGeoposition()
         {
             Latitude = Util.Gmit.LAT,
@@ -52,6 +53,12 @@ namespace GmitNavUWP
             else if(e.Key == VirtualKey.Escape)
             {
                 searchBox.Text = "";
+                if(gmitMap.Layers.Count > 4)
+                {
+                    gmitMap.Layers.ElementAt(4).Visible = false;
+                    gmitMap.Layers.RemoveAt(4);
+                }
+
             }
         }
 
@@ -111,11 +118,11 @@ namespace GmitNavUWP
             else
             {
                 index = AddMarker(room.lat, room.lng, room.name);
+                searchedRoomLevel = room.level;
                 ChangeLevel(room.level);
                 searchBox.Text = "";
                 await gmitMap.TrySetViewAsync(new Geopoint(new BasicGeoposition()
                 { Latitude = room.lat, Longitude = room.lng }), 19D, 0, 0);
-
             }
             return index;
         }
@@ -179,18 +186,15 @@ namespace GmitNavUWP
                 Room destRoom = FindRoom(searchBox.Text);
                 if (destRoom != null)
                 {
-                    try
+                    var count = gmitMap.Layers.Count;
+                    if (count > 4)
                     {
-                        var count = gmitMap.Children.Count;
-                        if (gmitMap.Layers.Count > 4)
-                        {
-                            gmitMap.Layers.ElementAt(gmitMap.Layers.Count - 1).Visible = false;
-                            gmitMap.Layers.RemoveAt(gmitMap.Layers.Count -1);   //Previous Room icon erase
-                        }
-                    }
-                    catch(Exception exep)
+                        gmitMap.Layers.ElementAt(count - 1).Visible = false;
+                        gmitMap.Layers.RemoveAt(count -1);   //Previous Room icon erase
+                        searchedRoomLevel = 255;
+                    } else
                     {
-                        Debug.WriteLine(exep.Message);
+                        searchedRoomLevel = destRoom.level;
                     }
                     await ShowRoomAsync(destRoom);
                 }
@@ -304,6 +308,19 @@ namespace GmitNavUWP
                 {
                     gmitMap.Layers.ElementAt(i).Visible = false;
                     buttons.ElementAt(i).IsEnabled = true;
+                }
+            }
+            if (gmitMap.Layers.Count > 4)
+            {
+                Debug.WriteLine(searchedRoomLevel);
+                Debug.WriteLine(level);
+                if (searchedRoomLevel != level)
+                {
+                    gmitMap.Layers.ElementAt(4).Visible = false;
+                }
+                else
+                {
+                    gmitMap.Layers.ElementAt(4).Visible = true;
                 }
             }
         }

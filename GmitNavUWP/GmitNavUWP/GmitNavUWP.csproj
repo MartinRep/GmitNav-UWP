@@ -17,7 +17,11 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WindowsXamlEnableOverview>true</WindowsXamlEnableOverview>
-    <PackageCertificateKeyFile>GmitNavUWP_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateKeyFile>GmitNavUWP_StoreKey.pfx</PackageCertificateKeyFile>
+    <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
+    <AppxBundle>Always</AppxBundle>
+    <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
+    <PackageCertificateThumbprint>52CC96A79793C997ACABAFF615FF7204B41D2869</PackageCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -108,6 +112,7 @@
       <SubType>Designer</SubType>
     </AppxManifest>
     <None Include="Assets\rooms.json" />
+    <None Include="GmitNavUWP_StoreKey.pfx" />
     <None Include="GmitNavUWP_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
@@ -115,6 +120,7 @@
     <Content Include="Assets\GmitMaps\dgmit1.png" />
     <Content Include="Assets\GmitMaps\dgmit2.png" />
     <Content Include="Assets\GmitMaps\dgmit3.png" />
+    <None Include="Package.StoreAssociation.xml" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
