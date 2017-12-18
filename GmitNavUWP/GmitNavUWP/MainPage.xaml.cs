@@ -146,7 +146,6 @@ namespace GmitNavUWP
         public async void MapConfigAsync(object sender, RoutedEventArgs e)
         {
             gmitMap.LandmarksVisible = false;
-            gmitMap.Visibility = Visibility.Visible;
             await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit0.png")); //GroundLevel
             await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit1.png")); // First Level
             await AddMapOverlayAsync(Util.Building.Old.NORTH, Util.Building.Old.WEST, new Uri("ms-appx:///Assets/GmitMaps/dgmit2.png")); // Second Level
@@ -163,6 +162,9 @@ namespace GmitNavUWP
             await gmitMap.TrySetViewAsync(gmit, 19D, 0, 0);
             gmitMap.ZoomLevelChanged += MapZoomControl;
             SearchButton.Click += SearchButton_ClickAsync;
+            LoadingIndicator.IsActive = false;
+            SearchPanel.Visibility = Visibility.Visible;
+
             //gmitMap.CenterChanged += CenterBoundries;  //GPS locations calibration needed
         }
 
